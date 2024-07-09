@@ -1,0 +1,171 @@
+import pandas as pd
+import dask.dataframe as dd
+from dask_ml.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+import gc
+
+#read filepath
+
+file_paths = [r"/home/rm18334/Dataset for DEDDIAG/house_00/house_00/item_0010_data.tsv/item_0010_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_01/house_01/item_0001_data.tsv/item_0001_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_01/house_01/item_0002_data.tsv/item_0002_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_01/house_01/item_0004_data.tsv/item_0004_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_02/house_02/item_0011_data.tsv/item_0011_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_02/house_02/item_0012_data.tsv/item_0012_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_03/house_03/item_0013_data.tsv/item_0013_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_03/house_03/item_0014_data.tsv/item_0014_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_03/house_03/item_0016_data.tsv/item_0016_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_04/house_04/item_0017_data.tsv/item_0017_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_04/house_04/item_0018_data.tsv/item_0018_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_04/house_04/item_0019_data.tsv/item_0019_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_04/house_04/item_0020_data.tsv/item_0020_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_05/house_05/item_0005_data.tsv/item_0005_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_05/house_05/item_0006_data.tsv/item_0006_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_06/house_06/item_0031_data.tsv/item_0031_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_06/house_06/item_0032_data.tsv/item_0032_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_06/house_06/item_0033_data.tsv/item_0033_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_06/house_06/item_0034_data.tsv/item_0034_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_06/house_06/item_0036_data.tsv/item_0036_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_06/house_06/item_0037_data.tsv/item_0037_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_07/house_07/item_0068_data.tsv/item_0068_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_07/house_07/item_0069_data.tsv/item_0069_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_07/house_07/item_0070_data.tsv/item_0070_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_07/house_07/item_0071_data.tsv/item_0071_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0024_data.tsv/item_0024_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0026_data.tsv/item_0026_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0027_data.tsv/item_0027_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0028_data.tsv/item_0028_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0035_data.tsv/item_0035_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0051_data.tsv/item_0051_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0052_data.tsv/item_0052_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0053_data.tsv/item_0053_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_08/house_08/item_0059_data.tsv/item_0059_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_09/house_09/item_0044_data.tsv/item_0044_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_09/house_09/item_0045_data.tsv/item_0045_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_09/house_09/item_0046_data.tsv/item_0046_data.tsv",
+              #r"/home/rm18334/Dataset for DEDDIAG/house_10/house_10/item_0065_data.tsv/item_0065_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_10/house_10/item_0066_data.tsv/item_0066_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_10/house_10/item_0067_data.tsv/item_0067_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_11/house_11/item_0038_data.tsv/item_0038_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_12/house_12/item_0061_data.tsv/item_0061_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_12/house_12/item_0062_data.tsv/item_0062_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_12/house_12/item_0063_data.tsv/item_0063_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_12/house_12/item_0064_data.tsv/item_0064_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_13/house_13/item_0039_data.tsv/item_0039_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_13/house_13/item_0040_data.tsv/item_0040_data.tsv",
+              # r"/home/rm18334/Dataset for DEDDIAG/house_13/house_13/item_0041_data.tsv/item_0041_data.tsv",
+              # r"/home/rm18334/Dataset for DEDDIAG/house_14/house_14/item_0081_data.tsv/item_0081_data.tsv",
+              # r"/home/rm18334/Dataset for DEDDIAG/house_14/house_14/item_0082_data.tsv/item_0082_data.tsv",
+              r"/home/rm18334/Dataset for DEDDIAG/house_14/house_14/item_0083_data.tsv/item_0083_data.tsv"
+
+              ]
+
+# Load data using Dask
+dfs = [dd.read_csv(file_path, sep='\t') for file_path in file_paths]
+df = dd.concat(dfs, axis=0).repartition(npartitions=100)
+
+# Convert 'time' column to datetime
+df['time'] = dd.to_datetime(df['time'], errors='coerce')
+
+# Sort the dataframe by time to ensure proper gap detection
+df = df.sort_values('time')
+
+# Detect time gaps greater than 1 hour 5 seconds
+time_gap_threshold = pd.Timedelta(hours=1, seconds=5)
+df['time_diff'] = df['time'].diff()
+
+# Mark values as missing where the time gap is greater than the threshold
+df['missing'] = df['time_diff'] > time_gap_threshold
+df['missing'] = df['missing'].fillna(False)
+
+# Extract datetime features
+df['year'] = df['time'].dt.year
+df['month'] = df['time'].dt.month
+df['day'] = df['time'].dt.day
+df['hour'] = df['time'].dt.hour
+df['minute'] = df['time'].dt.minute
+df['second'] = df['time'].dt.second
+
+# Drop 'time' and 'time_diff' columns
+df = df.drop(['time', 'time_diff', 'missing'], axis=1)
+
+# Drop rows with missing values
+df = df.dropna()
+
+# Encode categorical variables
+df = dd.get_dummies(df)
+
+# Define target column
+target_column = 'value'
+
+# Split the data into features (X) and target variable (y)
+X = df.drop(target_column, axis=1)
+y = df[target_column]
+print("Split the data into features and target variable")
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, shuffle=False)
+print("Split the data into training and testing sets")
+
+# Initialize the model
+rf_model = RandomForestRegressor(n_estimators=5, random_state=42, warm_start=True)
+
+# Train the model iteratively on chunks
+for i in range(X_train.npartitions):
+    X_chunk = X_train.get_partition(i).compute()
+    y_chunk = y_train.get_partition(i).compute()
+
+    if i > 0:
+        rf_model.n_estimators += 5  # Increase n_estimators to fit new trees
+
+    rf_model.fit(X_chunk, y_chunk)
+
+    # Free memory
+    del X_chunk, y_chunk
+    gc.collect()
+
+    print(f"Trained model on partition: {i}")
+
+print("Training done on all partitions")
+
+# Convert test data to Pandas DataFrame in chunks to avoid memory issues
+y_preds = []
+for i in range(X_test.npartitions):
+    X_test_chunk = X_test.get_partition(i).compute()
+    y_test_chunk = y_test.get_partition(i).compute()
+
+    y_pred_chunk = rf_model.predict(X_test_chunk)
+    y_preds.extend(y_pred_chunk)
+
+    # Free memory
+    del X_test_chunk, y_test_chunk
+    gc.collect()
+
+print("Prediction done")
+
+# Convert predictions and actual values to Pandas Series
+y_pred = pd.Series(y_preds)
+y_test = y_test.compute()
+
+# Evaluate the model
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+print(f'Mean Squared Error: {mse}')
+print(f'R^2 Score: {r2}')
+
+# Analyze feature importance
+feature_importances = pd.DataFrame(rf_model.feature_importances_,
+                                   index=X_train.columns,
+                                   columns=['importance']).sort_values('importance', ascending=False)
+
+# Display feature importance
+print(feature_importances)
+
+# Visualization
+plt.figure(figsize=(10, 6))
+sns.barplot(x=feature_importances.importance, y=feature_importances.index)
+plt.title('Feature Importance')
+plt.show()
